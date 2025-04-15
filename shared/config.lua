@@ -1,14 +1,12 @@
 Config = {}
-Config.Debug = false
+Config.Debug = false                 -- will skip animation and prints a lot of debug stuff don't use for production
 
-Config.Pickaxe = "provision_pickaxe"            -- Item from your database that you want to use for a pickaxe
-Config.HeavyPickaxe = "provision_heavy_pickaxe" -- Heavy Pickaxe reduces less durability
-Config.MineKey = 0x760A9C6F                     -- Key to Mine node (Left Click)
-Config.UseCinematic = false
+Config.Pickaxe = "provision_pickaxe" -- Item from your database that you want to use for a pickaxe
+Config.MineKey = 0x760A9C6F          -- Key to Mine node (Left Click)
 
-Config.PickaxeDamage = 5          -- Amount of damage done to pickaxe durability per mining nod
-Config.PickaxeBreakThreshold = 45 -- Anything lower than 30 druablity and pickaxe can possibly break based in breakchance
-Config.PickaxeBreakChance = 8     -- Rolls between 1,20 if lower than this number, pickaxe breaks (8 = 40% chance)
+Config.PickaxeDamage = 5             -- Amount of damage done to pickaxe durability per mining nod
+Config.PickaxeBreakThreshold = 45    -- Anything lower than x druablity and pickaxe can possibly break based on breakchance
+Config.PickaxeBreakChance = 8        -- Rolls between 1,20. If result is lower than this number, pickaxe breaks (8 = 40% chance)
 
 
 
