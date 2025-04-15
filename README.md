@@ -18,7 +18,7 @@ A mining script for VORP.
 # Dependencies
 - VORP
 - VORP Progressbar (you can use any progress bar, just need to modify client at line 166)
-- Polyzone - I used Outsiders Polyzone but you can you can test with other versions [https://github.com/outsider31000/PolyZone](Outsider Polyzone)
+- **Polyzone** - I used Outsider's Polyzone, but you can test with other versions: [Outsider Polyzone](https://github.com/outsider31000/PolyZone)
 
 # Installation
 - Copy files to resources folder
