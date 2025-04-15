@@ -15,6 +15,11 @@ A mining script for VORP.
 - NO MINIGAME (if you want one you can add one)
 - No need to equip pickaxe, just have in your inventory. This eliminates the walking animation (I hope)
 
+# Dependencies
+- VORP
+- VORP Progressbar (you can use any progress bar, just need to modify client at line 166)
+- Polyzone - I used Outsiders Polyzone but you can you can test with other versions [https://github.com/outsider31000/PolyZone](Outsider Polyzone)
+
 # Installation
 - Copy files to resources folder
 - Define mine zones using Polyzone (gaptooth included and rathskeller *requires spooni MLO*)
