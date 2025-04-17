@@ -138,8 +138,8 @@ RegisterNetEvent('bnddo_mining:client:startMining', function(mine, node, coords)
             DisableControlAction(0, 0x07CE1E61, false)
             DisableControlAction(0, 0xB2F377E8, false)
             DisableControlAction(0, 0xADEAF48C, false)
-            Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
-            Citizen.InvokeNative(0xAE6004120C18DF97, ped, 0, false)   -- Can't be lassod
+            Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true)  -- HidePedWeapons
+            Citizen.InvokeNative(0xAE6004120C18DF97, player, 0, false) -- Can't be lassod
             SetEnableHandcuffs(player, false, false)
             local timeout = 3000
 
@@ -275,6 +275,7 @@ CreateThread(function()
                 else
                     Debug("Player is outside " .. mineName .. " zone")
                     isInMineZone = nil
+                    MinedData = {}
                 end
             end)
         end
@@ -328,5 +329,5 @@ end)
 
 
 RegisterCommand("checkNodeStatus", function()
-    Debug("Node Status: " .. json.encode(MinedData))
+    print("Node Status: " .. json.encode(MinedData))
 end, false)

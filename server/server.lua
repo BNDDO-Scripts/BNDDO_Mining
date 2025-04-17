@@ -61,6 +61,9 @@ local function pickaxeDurability(player)
             -- TriggerClientEvent("bnddo_mining:client:pickaxeStatus", src, false)
             return
         end
+    elseif durability <= 2 then
+        exports.vorp_inventory:subItem(src, Config.Pickaxe, 1, meta)
+        Core.NotifyTip(src, "Your Pickaxe is Broken", 4000)
     end
 
     -- Apply updated metadata
@@ -110,6 +113,13 @@ RegisterNetEvent('bnddo_mining:server:giveItems', function(mine, node)
     local found
     local itemTable = shuffle(Config.MiningLocations[mine].nodes[node].items)
     local rewards = {}
+    local nodeKey = NodeKey(mine, Config.MiningLocations[mine].nodes[node].coords)
+    if NodeLimits[mine][nodeKey].currentCount >= NodeLimits[mine][nodeKey].maxCount then
+        found = false
+        Core.NotifyAvanced(src, "Node is depleted", "mp_lobby_textures", "cross", "COLOR_RED", 5000)
+        TriggerClientEvent("bnddo_mining:client:endMining", src, mine, node, found)
+        return
+    end
 
 
     for k, v in pairs(itemTable) do
@@ -142,7 +152,7 @@ RegisterNetEvent('bnddo_mining:server:giveItems', function(mine, node)
     end
     found = true
     -- TriggerEvent('bnddo_mining:server:checkPickaxe', src)
-    local nodeKey = NodeKey(mine, Config.MiningLocations[mine].nodes[node].coords)
+
     NodeLimits[mine][nodeKey].currentCount = NodeLimits[mine][nodeKey].currentCount + 1
     exports.vorp_inventory:addItem(src, selectedReward.name, itemCount)
 
