@@ -212,24 +212,22 @@ RegisterNetEvent('bnddo_mining:client:endMining', function(mine, node, found, it
 end)
 
 
-RegisterNetEvent('bnddo_mining:client:updateMiningNode', function(mineStatus)
-    if isInMineZone then
-        MinedData = MinedData or {}
+RegisterNetEvent('bnddo_mining:client:updateMiningNode', function(mineStatus, mine)
+    if isInMineZone ~= mine then return end
 
-        -- Define which fields are allowed to be updated from the server
-        local allowedFields = {
-            maxCount = true,
-            currentCount = true,
+    MinedData = MinedData or {}
 
-        }
+    local allowedFields = {
+        maxCount = true,
+        currentCount = true,
+    }
 
-        for nodeKey, nodeData in pairs(mineStatus) do
-            MinedData[nodeKey] = MinedData[nodeKey] or {}
+    for nodeKey, nodeData in pairs(mineStatus) do
+        MinedData[nodeKey] = MinedData[nodeKey] or {}
 
-            for field, value in pairs(nodeData) do
-                if allowedFields[field] then
-                    MinedData[nodeKey][field] = value
-                end
+        for field, value in pairs(nodeData) do
+            if allowedFields[field] then
+                MinedData[nodeKey][field] = value
             end
         end
     end
@@ -273,7 +271,7 @@ CreateThread(function()
                     else
                         playerHasPickaxe = false
                     end
-                    TriggerEvent('bnddo_mining:client:updateMiningNode', mineStatus.nodeLimits)
+                    TriggerEvent('bnddo_mining:client:updateMiningNode', mineStatus.nodeLimits, mineName)
                 else
                     Debug("Player is outside " .. mineName .. " zone")
                     isInMineZone = nil

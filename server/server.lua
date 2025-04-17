@@ -154,7 +154,7 @@ RegisterNetEvent('bnddo_mining:server:giveItems', function(mine, node)
         [nodeKey] = {
             currentCount = NodeLimits[mine][nodeKey].currentCount
         }
-    })
+    }, mine)
 end)
 
 
