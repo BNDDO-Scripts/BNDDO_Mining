@@ -14,6 +14,7 @@ A mining script for VORP.
 - VORP Progress bar CSS
 - NO MINIGAME (if you want one you can add one)
 - No need to equip pickaxe, just have in your inventory. This eliminates the walking animation (I hope)
+- Ore washing for rare items, locations, required wash item , rewards and chances all configurable
 
 # Dependencies
 - VORP
