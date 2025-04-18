@@ -70,7 +70,7 @@ local function waitForResourceLoaded(requestFunc, checkFunc, resourceName, timeo
     return true
 end
 
-local function isMiningAnimation(animDict, timeout)
+local function isAnimationLoaded(animDict, timeout)
     return waitForResourceLoaded(RequestAnimDict, HasAnimDictLoaded, animDict, timeout)
 end
 
@@ -125,7 +125,7 @@ RegisterNetEvent('bnddo_mining:client:startMining', function(mine, node, coords)
     ClearPedTasksImmediately(player)
 
     CreateThread(function()
-        if Config.Debug then
+        if Config.DevMode then
             Debug("Starting mining animation")
             TriggerServerEvent('bnddo_mining:server:giveItems', mine, node)
             return
@@ -143,7 +143,7 @@ RegisterNetEvent('bnddo_mining:client:startMining', function(mine, node, coords)
             SetEnableHandcuffs(player, false, false)
             local timeout = 3000
 
-            if isMiningAnimation(animDict, timeout) and isObjectLoaded(pickaxe, timeout) then
+            if isAnimationLoaded(animDict, timeout) and isObjectLoaded(pickaxe, timeout) then
                 TaskGoStraightToCoord(player, coords.x, coords.y, coords.z, 1.0, -1, 0.0, 0.0)
                 local playerInMiningPosition = false
                 local arrivalTimeout = GetGameTimer() + timeout
@@ -192,6 +192,79 @@ RegisterNetEvent('bnddo_mining:client:startMining', function(mine, node, coords)
     end)
 end)
 
+RegisterNetEvent('bnddo_mining:client:startWashing', function(ore, oreLabel)
+    local player = PlayerPedId()
+    local coords = GetEntityCoords(player)
+    local animDict = "script_re@gold_panner@gold_success"
+    local animName = "pile_of_nothing"
+    local minePanObj = "p_cs_miningpan01x"
+
+    -- Check if a washing item is required
+    if Config.WashingItem then
+        local hasItem = Core.Callback.TriggerAwait('bnddo:server:checkWashable', Config.WashingItem)
+        if not hasItem then
+            Core.NotifyTip("You don't have a washing item", 4000)
+            Debug("Player doesn't have the required washing item.")
+            return
+        end
+    end
+
+    -- Check if player is in water and in an allowed zone
+    if not IsEntityInWater(player) then
+        Core.NotifyTip("You must be in water to wash ores", 4000)
+        Debug("Player is not in water.")
+        return
+    end
+
+    -- check if player is in a washing area
+    local inWashableZone = false
+    for zoneTypeId, isAllowed in pairs(Config.AllowWashLocations) do
+        if isAllowed then
+            local zoneHash = Citizen.InvokeNative(0x43AD8FC02B429D33, coords, zoneTypeId)
+            if zoneHash and zoneHash ~= 0 then
+                inWashableZone = true
+                break
+            end
+        end
+    end
+
+    if not inWashableZone then
+        Core.NotifyTip("You're not in a valid washing location", 4000)
+        Debug("Not in an allowed washing zone.")
+        return
+    end
+
+    Debug("Starting washing: " .. ore)
+    Core.NotifyTip("Washing " .. oreLabel .. "...", 4000)
+
+    Wait(100)
+    if Config.DevMode then
+        TriggerServerEvent('bnddo_mining:server:giveWashedItem', ore)
+        return
+    end
+
+    if isAnimationLoaded(animDict, 5000) and isObjectLoaded(minePanObj, 5000) then
+        ClearPedTasksImmediately(player)
+        exports.vorp_inventory:closeInventory(player)
+        TriggerEvent("vorp_inventory:Client:DisableInventory", true)
+        local panModel = CreateObject(GetHashKey(minePanObj), coords, true, true, true)
+        AttachEntityToEntity(panModel, player, GetEntityBoneIndexByName(player, "PH_L_Hand"), 0.000, 0.000, 0.000, 0.000,
+            0.000, 0.000, true, true, false, false, 0, true)
+        TaskPlayAnim(player, animDict, animName, 8.0, -15.0, -1, 1, 0, false, false, false, false)
+
+        progressbar.start("Washing", 18000,
+            function()
+                ClearPedTasksImmediately(player)
+                DeleteObject(panModel)
+                TriggerServerEvent('bnddo_mining:server:giveWashedItem', ore)
+                TriggerEvent("vorp_inventory:Client:DisableInventory", false)
+            end,
+            'linear', '#ff0000', '30vw')
+    else
+        Debug("Failed to load resources for washing.")
+    end
+end)
+
 RegisterNetEvent('bnddo_mining:client:endMining', function(mine, node, found, itemFound)
     local node = Config.MiningLocations[mine].nodes[node]
     local nodeKey = NodeKey(mine, node.coords)
@@ -199,7 +272,7 @@ RegisterNetEvent('bnddo_mining:client:endMining', function(mine, node, found, it
 
     MinedData[nodeKey] = MinedData[nodeKey] or {} -- Ensure it's initialized
 
-    MinedData[nodeKey].timeout = (found and itemFound and node.timeout) or 6000
+    MinedData[nodeKey].timeout = (found and node.timeout) or 6000
     MinedData[nodeKey].startedAt = GetGameTimer()
     MinedData[nodeKey].isLocked = true
 
@@ -234,6 +307,9 @@ RegisterNetEvent('bnddo_mining:client:updateMiningNode', function(mineStatus, mi
 end)
 
 
+
+
+
 -- -------------------------------------------------------------------------- --
 --                                   THREADS                                  --
 -- -------------------------------------------------------------------------- --
@@ -257,7 +333,7 @@ CreateThread(function()
                 debugPoly = mineData.zone.debugPoly,
             })
 
-            if isInside == nil then
+            if isInside == nil or mineZone == nil then
                 return
             end
             mineZone:onPlayerInOut(function(isInside)
@@ -313,6 +389,7 @@ CreateThread(function()
                 if canUsePrompt then
                     playerNearNode = true
                     addMiningPrompt(node)
+
 
                     if UiPromptHasHoldModeCompleted(StartMining) then
                         isPromptPressed = true

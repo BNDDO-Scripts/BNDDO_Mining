@@ -70,6 +70,70 @@ local function pickaxeDurability(player)
     exports.vorp_inventory:setItemMetadata(src, pickaxe.id, metadata, 1)
 end
 
+local function registerItems()
+    CreateThread(function()
+        for oreName, allowed in pairs(Config.SpecialOre) do
+            exports.vorp_inventory:registerUsableItem(oreName, function(data)
+                if allowed then
+                    TriggerClientEvent("bnddo_mining:client:startWashing", data.source, data.item.name, data.item.label)
+                else
+                    Core.NotifyTip(data.source, "Not a washable Item", 3000)
+                end
+            end, GetCurrentResourceName())
+        end
+    end)
+end
+
+local function generateItem(src, itemTable)
+    local rewards = {}
+
+    for k, v in pairs(itemTable) do
+        local chance = math.random(1, 10)
+        Debug("Chance Roll: " .. chance)
+        if chance <= v.chance then
+            table.insert(rewards, v)
+        end
+    end
+
+    if #rewards == 0 then
+        return nil, nil
+    end
+
+    local randomtotal = keysx(rewards)
+    local itemChance = math.random(1, randomtotal)
+    local selectedReward = rewards[itemChance]
+    local itemCount = math.random(1, selectedReward.amount)
+
+    return selectedReward, itemCount
+end
+
+local function handleItemReward(src, itemTable, options)
+    local selectedReward, itemCount = generateItem(src, itemTable)
+
+    if not selectedReward then
+        if options.notifyOnFail then
+            Core.NotifyAvanced(src, "Nothing found", "mp_lobby_textures", "cross", "COLOR_RED", 5000)
+        end
+        if options.onFail then options.onFail() end
+        return
+    end
+
+    if not exports.vorp_inventory:canCarryItem(src, selectedReward.name, itemCount) then
+        Core.NotifyTip(src, "Can't carry anymore " .. selectedReward.label, 3000)
+        if options.onFail then options.onFail() end
+        return
+    end
+
+    exports.vorp_inventory:addItem(src, selectedReward.name, itemCount)
+
+    if options.notifyOnSuccess then
+        Core.NotifyAvanced(src, string.format("%s x %s", selectedReward.label, itemCount), "pm_awards_mp",
+            "awards_set_g_009", "COLOR_WHITE", 4000)
+    end
+
+    if options.onSuccess then options.onSuccess(selectedReward.name, itemCount) end
+end
+
 
 -- -------------------------------------------------------------------------- --
 --                                  CALLBACKS                                 --
@@ -80,14 +144,23 @@ Core.Callback.Register('bnddo:server:checkMiningStatus', function(source, cb, mi
     local pickaxeCount = getPickaxeStatus(src)
     local nodeStatus = getMineNodeStatus(mine)
 
-    -- Return both statuses to the callback
     cb({
         hasPickaxe = pickaxeCount,
-        nodeLimits = nodeStatus
+        nodeLimits = nodeStatus,
+
     })
 end)
 
+Core.Callback.Register('bnddo:server:checkWashable', function(source, cb, item)
+    local src = source
+    local itemCount = exports.vorp_inventory:getItemCount(src, nil, item)
 
+    if itemCount > 0 then
+        cb(true)
+    else
+        cb(false)
+    end
+end)
 
 
 
@@ -106,65 +179,72 @@ RegisterNetEvent('bnddo:server:pickaxeStatus', function(source, cb)
     cb(count)
 end)
 
--- ------------------------------- give Items ------------------------------- --
+RegisterNetEvent('bnddo_mining:server:giveWashedItem', function(item)
+    local src = source
 
+    Debug("Giving washed items for " .. item)
+
+    local itemTable = shuffle(Config.SpecialOre[item].items)
+    handleItemReward(src, itemTable, {
+        notifyOnFail = true,
+        notifyOnSuccess = true,
+        onSuccess = function(itemGive, count)
+            Debug("Item: " .. itemGive .. ", Count: " .. count)
+            exports.vorp_inventory:subItem(src, item, 1)
+        end,
+        onFail = function()
+            Debug("Failed to generate item")
+            exports.vorp_inventory:subItem(src, item, 1)
+        end
+    })
+end)
+
+
+-- ------------------------------- give Items ------------------------------- --
 RegisterNetEvent('bnddo_mining:server:giveItems', function(mine, node)
     local src = source
-    local found
+    local found = false
     local itemTable = shuffle(Config.MiningLocations[mine].nodes[node].items)
-    local rewards = {}
     local nodeKey = NodeKey(mine, Config.MiningLocations[mine].nodes[node].coords)
+
+
     if NodeLimits[mine][nodeKey].currentCount >= NodeLimits[mine][nodeKey].maxCount then
-        found = false
         Core.NotifyAvanced(src, "Node is depleted", "mp_lobby_textures", "cross", "COLOR_RED", 5000)
         TriggerClientEvent("bnddo_mining:client:endMining", src, mine, node, found)
         return
     end
 
 
-    for k, v in pairs(itemTable) do
+    local filteredItems = {}
+    for _, v in pairs(itemTable) do
         local chance = math.random(1, 10)
         Debug(chance)
         if chance <= v.chance then
-            table.insert(rewards, v)
+            table.insert(filteredItems, v)
         end
     end
 
-    if rewards == nil or #rewards == 0 then
-        found = false
-        Core.NotifyAvanced(src, "Nothing found", "mp_lobby_textures", "cross", "COLOR_RED", 5000)
-        TriggerClientEvent("bnddo_mining:client:endMining", src, mine, node, found)
-        return
-    end
 
+    handleItemReward(src, filteredItems, {
+        notifyOnFail = true,
+        notifyOnSuccess = true,
+        onFail = function()
+            TriggerClientEvent("bnddo_mining:client:endMining", src, mine, node, found)
+        end,
+        onSuccess = function(selectedReward, itemCount)
+            found = true
+            NodeLimits[mine][nodeKey].currentCount = NodeLimits[mine][nodeKey].currentCount + 1
 
-    local randomtotal = keysx(rewards)
-    local itemChance = math.random(1, randomtotal)
-    local selectedReward = rewards[itemChance] -- cache it here
-    local itemCount = math.random(1, selectedReward.amount)
-    local canCarryItem = exports.vorp_inventory:canCarryItem(src, selectedReward.name, itemCount)
+            pickaxeDurability(src)
 
-    if not canCarryItem then
-        found = false
-        Core.NotifyTip(src, "Can't carry anymore " .. selectedReward.label, 3000)
-        TriggerClientEvent("bnddo_mining:client:endMining", src, mine, node, found)
-        return
-    end
-    found = true
-    -- TriggerEvent('bnddo_mining:server:checkPickaxe', src)
-
-    NodeLimits[mine][nodeKey].currentCount = NodeLimits[mine][nodeKey].currentCount + 1
-    exports.vorp_inventory:addItem(src, selectedReward.name, itemCount)
-
-    Core.NotifyAvanced(src, string.format("%s x %s", selectedReward.label, itemCount), "pm_awards_mp",
-        "awards_set_g_009", "COLOR_WHITE", 4000)
-    pickaxeDurability(src)
-    TriggerClientEvent("bnddo_mining:client:endMining", src, mine, node, found, selectedReward.label, itemCount)
-    TriggerClientEvent('bnddo_mining:client:updateMiningNode', -1, {
-        [nodeKey] = {
-            currentCount = NodeLimits[mine][nodeKey].currentCount
-        }
-    }, mine)
+            TriggerClientEvent("bnddo_mining:client:endMining", src, mine, node, found, selectedReward.label, itemCount)
+            TriggerClientEvent('bnddo_mining:client:updateMiningNode', -1, {
+                [nodeKey] = {
+                    currentCount = NodeLimits[mine][nodeKey].currentCount
+                }
+            }, mine)
+        end
+    })
 end)
 
 
@@ -211,6 +291,9 @@ AddEventHandler('onResourceStart', function(resourceName)
             }
         end
         print("Creating NodeLimits for " .. k)
+        Wait(50)
+        print("Creating Usables")
+        registerItems()
     end
 end)
 
@@ -221,6 +304,12 @@ end)
 
 -- -------------------------------------------------------------------------- --
 --                                   THREADS                                  --
+-- -------------------------------------------------------------------------- --
+
+
+
+-- -------------------------------------------------------------------------- --
+--                                  COMMANDS                                  --
 -- -------------------------------------------------------------------------- --
 
 RegisterCommand('serverMineStatus', function(source, args, rawCommand)
@@ -238,4 +327,4 @@ RegisterCommand('serverMineStatus', function(source, args, rawCommand)
     else
         print("Invalid mine or node.")
     end
-end)
+end, true)
