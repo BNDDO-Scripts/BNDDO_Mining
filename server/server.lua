@@ -181,6 +181,7 @@ end)
 
 RegisterNetEvent('bnddo_mining:server:giveWashedItem', function(item)
     local src = source
+    if src == 0 then return end -- protecting from non client calls
 
     Debug("Giving washed items for " .. item)
 
@@ -203,6 +204,7 @@ end)
 -- ------------------------------- give Items ------------------------------- --
 RegisterNetEvent('bnddo_mining:server:giveItems', function(mine, node)
     local src = source
+    if src == 0 then return end
     local found = false
     local itemTable = shuffle(Config.MiningLocations[mine].nodes[node].items)
     local nodeKey = NodeKey(mine, Config.MiningLocations[mine].nodes[node].coords)
@@ -215,17 +217,7 @@ RegisterNetEvent('bnddo_mining:server:giveItems', function(mine, node)
     end
 
 
-    local filteredItems = {}
-    for _, v in pairs(itemTable) do
-        local chance = math.random(1, 10)
-        Debug(chance)
-        if chance <= v.chance then
-            table.insert(filteredItems, v)
-        end
-    end
-
-
-    handleItemReward(src, filteredItems, {
+    handleItemReward(src, itemTable, {
         notifyOnFail = true,
         notifyOnSuccess = true,
         onFail = function()
