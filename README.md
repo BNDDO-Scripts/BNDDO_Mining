@@ -32,5 +32,5 @@ A mining script for VORP.
 
 # Credits
 - BGS Mining for the Node based mining concepts. Also, reowrked a bit of the code to work here: https://github.com/Kianimal/BGS_Mining
-- JC Mining for the Polyzone based mining concepts: https://github.com/Jewsie/jc-mining-revamped
+- JC Mining for the Polyzone based mining concepts
 - VORP Mining for much of the logic behind durablity, randomization etc: https://github.com/VORPCORE/vorp_mining
