@@ -33,7 +33,7 @@ local function promptSetup()
     end
     -- Register new prompt
     StartMining = UiPromptRegisterBegin()
-    UiPromptSetControlAction(StartMining, Config.MineKey) -- Example: 'X' button
+    UiPromptSetControlAction(StartMining, Config.MineKey)
     local label = VarString(10, 'LITERAL_STRING', "Mine")
     UiPromptSetText(StartMining, label)
     UiPromptSetEnabled(StartMining, true)
@@ -157,9 +157,9 @@ RegisterNetEvent('bnddo_mining:client:startMining', function(mine, node, coords)
                                 DeleteEntity(pickaxeModel)
                                 DeleteObject(pickaxeModel)
                             end
-                            ClearPedTasks(ped)
-                            Citizen.InvokeNative(0xAE6004120C18DF97, ped, 0, true) -- turn able to be lassoed back on
-                            SetEnableHandcuffs(player, false, true)                -- turn handcuffs back on
+                            ClearPedTasks(player)
+                            Citizen.InvokeNative(0xAE6004120C18DF97, player, 0, true) -- turn able to be lassoed back on
+                            SetEnableHandcuffs(player, false, true)                   -- turn handcuffs back on
                             ClearPedTasksImmediately(player)
                             isPromptPressed = false
                             -- !Call server to give items and stuff
@@ -305,15 +305,11 @@ RegisterNetEvent('bnddo_mining:client:endMining', function(mine, node, found, it
     local nodeKey = NodeKey(mine, node.coords)
     Debug("Ending mining for node: " .. nodeKey)
 
-    MinedData[nodeKey] = MinedData[nodeKey] or {} -- Ensure it's initialized
+    MinedData[nodeKey] = MinedData[nodeKey] or {}
 
     MinedData[nodeKey].timeout = (found and node.timeout) or 6000
     MinedData[nodeKey].startedAt = GetGameTimer()
     MinedData[nodeKey].isLocked = true
-
-
-
-    -- clear all the mining states
 
     isPlayerMining = false
     isPromptPressed = false
@@ -348,7 +344,6 @@ end)
 
 -- ----------------------------- PolyZone Thread ---------------------------- --
 CreateThread(function()
-    -- repeat Wait(1000) until LocalPlayer.state.IsInSession
     local isInside = false
     for mineName, mineData in pairs(Config.MiningLocations) do
         if mineData.bliphash and mineData.bliphash ~= "" then
@@ -403,9 +398,8 @@ CreateThread(function()
 
         local playerNearNode = false
 
-        if isInMineZone and playerHasPickaxe and not isPlayerMining and not IsEntityDead(player) then -- player states
+        if isInMineZone and playerHasPickaxe and not isPlayerMining and not IsEntityDead(player) then
             local playerCoords = GetEntityCoords(player)
-            -- callback to check tool (equipment state
             for node, nodeData in pairs(Config.MiningLocations[isInMineZone].nodes) do
                 local playerDistance = checkDistance(playerCoords, nodeData.coords)
                 local nodeKey = NodeKey(isInMineZone, nodeData.coords)
@@ -447,19 +441,19 @@ if Config.Debug then
 
         -- Cast a probe 10 units down
         local result, waterPos = TestProbeAgainstAllWater(
-            pos.x, pos.y, pos.z + 1.0,  -- start a bit above
-            pos.x, pos.y, pos.z - 10.0, -- end below
-            0                           -- flags (usually 0)
+            pos.x, pos.y, pos.z + 1.0,
+            pos.x, pos.y, pos.z - 10.0,
+            0
         )
 
-        if result == 1 then -- SCRIPT_WATER_TEST_RESULT_WATER
+        if result == 1 then
             local distance = math.abs(pos.z - waterPos.z)
             if distance <= 1.5 then
                 print("Near water! Distance:", distance)
             else
                 print("Water detected but too far below. Distance:", distance)
             end
-        elseif result == 2 then -- blocked
+        elseif result == 2 then
             print("Probe was blocked (hit collision).")
         else
             print("No water below.")
