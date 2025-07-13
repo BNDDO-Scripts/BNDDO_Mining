@@ -25,6 +25,7 @@ local function addBlips(mine, bliphash, coords)
     Citizen.InvokeNative(0x9CB1A1623062F402, blip, mine)
 end
 -- ------------------------------ setup prompts ----------------------------- --
+-- TODO add option for ox_target
 local function promptSetup()
     if PromptGroup ~= nil then
         UiPromptDelete(StartMining)
@@ -91,21 +92,7 @@ local function isNodeUnlocked(nodeKey)
     return hasTimedOut
 end
 
-
--- -------------------------------------------------------------------------- --
---                                  CALLBACKS                                 --
--- -------------------------------------------------------------------------- --
-
-
--- -------------------------------------------------------------------------- --
---                                   EXPORTS                                  --
--- -------------------------------------------------------------------------- --
-
-
--- -------------------------------------------------------------------------- --
---                                   EVENTS                                   --
--- -------------------------------------------------------------------------- --
-
+-- TODO Helper animation function to play any animation passed in
 -- -------------------------- update pickaxe status ------------------------- --
 RegisterNetEvent('bnddo_mining:client:pickaxeStatus', function(status)
     playerHasPickaxe = status
@@ -192,6 +179,54 @@ RegisterNetEvent('bnddo_mining:client:startMining', function(mine, node, coords)
     end)
 end)
 
+RegisterNetEvent('bnddo_mining:client:startDigging', function()
+    local anim = { "amb_work@world_human_gravedig@working@male_b@idle_a", "idle_a" }
+    local digObj = "p_shovel02x"
+
+    local ped = PlayerPedId()
+    local pos = GetEntityCoords(ped)
+
+    local result, waterPos = TestProbeAgainstAllWater(
+        pos.x, pos.y, pos.z + 1.0,
+        pos.x, pos.y, pos.z - 10.0,
+        0
+    )
+
+    if result == 1 then
+        local distance = math.abs(pos.z - waterPos.z)
+        if distance <= 1.7 then
+            if isAnimationLoaded(anim[1], 5000) and isObjectLoaded(digObj, 5000) then
+                ClearPedTasksImmediately(ped)
+                exports.vorp_inventory:closeInventory(ped)
+                TriggerEvent("vorp_inventory:Client:DisableInventory", true)
+                local digObj = CreateObject(GetHashKey(digObj), pos, true, true, true)
+                AttachEntityToEntity(digObj, ped, GetEntityBoneIndexByName(ped, "PH_L_Hand"), 0.000, 0.000,
+                    0.000,
+                    0.000,
+                    0.000, 0.000, true, true, false, false, 0, true)
+                TaskPlayAnim(ped, anim[1], anim[2], 8.0, -15.0, -1, 1, 0, false, false, false, false)
+
+                progressbar.start("Digging", 18000,
+                    function()
+                        ClearPedTasksImmediately(ped)
+                        DeleteObject(digObj)
+                        TriggerServerEvent('bnddo_mining:server:giveDigItem')
+                        TriggerEvent("vorp_inventory:Client:DisableInventory", false)
+                    end,
+                    'linear', '#ff0000', '30vw')
+            else
+                Debug("Failed to load resources for washing.")
+            end
+        else
+            Core.NotifyTip("You're not close enough to water", 4000)
+        end
+    elseif result == 2 then
+        Core.NotifyTip("You don't find a place to dig", 4000)
+    else
+        Core.NotifyTip("You don't see any water nearby", 4000)
+    end
+end)
+
 RegisterNetEvent('bnddo_mining:client:startWashing', function(ore, oreLabel)
     local player = PlayerPedId()
     local coords = GetEntityCoords(player)
@@ -211,7 +246,7 @@ RegisterNetEvent('bnddo_mining:client:startWashing', function(ore, oreLabel)
 
     -- Check if player is in water and in an allowed zone
     if not IsEntityInWater(player) then
-        Core.NotifyTip("You must be in water to wash ores", 4000)
+        Core.NotifyTip("You are not in water", 4000)
         Debug("Player is not in water.")
         return
     end
@@ -305,9 +340,6 @@ RegisterNetEvent('bnddo_mining:client:updateMiningNode', function(mineStatus, mi
         end
     end
 end)
-
-
-
 
 
 -- -------------------------------------------------------------------------- --
@@ -404,7 +436,33 @@ CreateThread(function()
     end
 end)
 
+if Config.Debug then
+    RegisterCommand("checkNodeStatus", function()
+        print("Node Status: " .. json.encode(MinedData))
+    end, false)
 
-RegisterCommand("checkNodeStatus", function()
-    print("Node Status: " .. json.encode(MinedData))
-end, false)
+    RegisterCommand('checkWater', function()
+        local ped = PlayerPedId()
+        local pos = GetEntityCoords(ped)
+
+        -- Cast a probe 10 units down
+        local result, waterPos = TestProbeAgainstAllWater(
+            pos.x, pos.y, pos.z + 1.0,  -- start a bit above
+            pos.x, pos.y, pos.z - 10.0, -- end below
+            0                           -- flags (usually 0)
+        )
+
+        if result == 1 then -- SCRIPT_WATER_TEST_RESULT_WATER
+            local distance = math.abs(pos.z - waterPos.z)
+            if distance <= 1.5 then
+                print("Near water! Distance:", distance)
+            else
+                print("Water detected but too far below. Distance:", distance)
+            end
+        elseif result == 2 then -- blocked
+            print("Probe was blocked (hit collision).")
+        else
+            print("No water below.")
+        end
+    end)
+end

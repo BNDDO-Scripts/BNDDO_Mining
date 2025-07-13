@@ -38,6 +38,7 @@ local function getMineNodeStatus(mine, node)
     return NodeLimits[mine] or false
 end
 
+-- TODO Combine into one handler
 local function pickaxeDurability(player)
     local src = player
     local pickaxe = exports.vorp_inventory:getItem(src, Config.Pickaxe)
@@ -70,6 +71,39 @@ local function pickaxeDurability(player)
     exports.vorp_inventory:setItemMetadata(src, pickaxe.id, metadata, 1)
 end
 
+local function shovelDurability(player)
+    local src = player
+    local shovel = exports.vorp_inventory:getItem(src, Config.Shovel)
+    if not shovel then return end
+
+    local meta = shovel.metadata or {}
+    local durability = tonumber(meta.durability) or 100
+
+    -- Reduce durability
+    durability = durability - 1
+    local metadata = {
+        description = "Shovel Durability: " .. durability,
+        durability = durability
+    }
+
+    if durability < Config.PickaxeBreakThreshold then
+        local chance = math.random(1, 20)
+        if chance < Config.PickaxeBreakChance then
+            exports.vorp_inventory:subItem(src, Config.Shovel, 1, meta)
+            Core.NotifyTip(src, "Your Shovel is Broken", 4000)
+            -- TriggerClientEvent("bnddo_mining:client:pickaxeStatus", src, false)
+            return
+        end
+    elseif durability <= 2 then
+        exports.vorp_inventory:subItem(src, Config.Pickaxe, 1, meta)
+        Core.NotifyTip(src, "Your Shovel is Broken", 4000)
+    end
+
+    -- Apply updated metadata
+    exports.vorp_inventory:setItemMetadata(src, shovel.id, metadata, 1)
+end
+-----------------------------------------
+
 local function registerItems()
     CreateThread(function()
         for oreName, allowed in pairs(Config.SpecialOre) do
@@ -81,6 +115,10 @@ local function registerItems()
                 end
             end, GetCurrentResourceName())
         end
+
+        exports.vorp_inventory:registerUsableItem(Config.Shovel, function(data)
+            TriggerClientEvent("bnddo_mining:client:startDigging", data.source)
+        end, GetCurrentResourceName())
     end)
 end
 
@@ -131,7 +169,7 @@ local function handleItemReward(src, itemTable, options)
             "awards_set_g_009", "COLOR_WHITE", 4000)
     end
 
-    if options.onSuccess then options.onSuccess(selectedReward.name, itemCount) end
+    if options.onSuccess then options.onSuccess(selectedReward.label, itemCount) end
 end
 
 
@@ -200,6 +238,25 @@ RegisterNetEvent('bnddo_mining:server:giveWashedItem', function(item)
     })
 end)
 
+RegisterNetEvent('bnddo_mining:server:giveDigItem', function()
+    local src = source
+    if src == 0 then return end -- protecting from non client calls
+
+    local itemTable = shuffle(Config.DigReward)
+    handleItemReward(src, itemTable, {
+        notifyOnFail = false,
+        notifyOnSuccess = false,
+        onSuccess = function(itemGive, count)
+            Core.NotifyAvanced(src, string.format("%s x %s", itemGive, count), "pm_awards_mp",
+                "awards_set_g_009", "COLOR_WHITE", 4000)
+            shovelDurability(src)
+        end,
+        onFail = function()
+            Core.NotifyAvanced(src, "Nothing found", "mp_lobby_textures", "cross", "COLOR_RED", 5000)
+        end
+    })
+end)
+
 
 -- ------------------------------- give Items ------------------------------- --
 RegisterNetEvent('bnddo_mining:server:giveItems', function(mine, node)
@@ -208,6 +265,11 @@ RegisterNetEvent('bnddo_mining:server:giveItems', function(mine, node)
     local found = false
     local itemTable = shuffle(Config.MiningLocations[mine].nodes[node].items)
     local nodeKey = NodeKey(mine, Config.MiningLocations[mine].nodes[node].coords)
+
+    if not NodeLimits[mine] then
+        print("Node not found in NodeLimits")
+        return
+    end
 
 
     if NodeLimits[mine][nodeKey].currentCount >= NodeLimits[mine][nodeKey].maxCount then

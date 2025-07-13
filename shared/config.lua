@@ -5,17 +5,19 @@ Config.DevMode = false -- Will skip animations to help with testing
 -- -------------------------------------------------------------------------- --
 --                                MINING CONFIG                               --
 -- -------------------------------------------------------------------------- --
-Config.Pickaxe = "provision_pickaxe" -- Item from your database that you want to use for a pickaxe
-Config.MineKey = 0x760A9C6F          -- Key to Mine node (G key)
+Config.Pickaxe = "p_pickaxe"             -- Item from your database that you want to use for a pickaxe
+Config.Shovel = "provision_miner_shovel" -- Item to dig near water
+Config.WashingItem = "p_miner_pan"       -- If you want to require a washin item, otherwise set to false
+Config.MineKey = 0x760A9C6F              -- Key to Mine node (G key)
 
-Config.PickaxeDamage = 2             -- Amount of damage done to pickaxe durability per mining nod
-Config.PickaxeBreakThreshold = 30    -- Anything lower than 30 druablity and pickaxe can possibly break based in breakchance
-Config.PickaxeBreakChance = 4        -- Rolls between 1,20 if lower than this number, pickaxe breaks (8 = 40% chance)
+Config.PickaxeDamage = 2                 -- Amount of damage done to pickaxe durability per mining nod
+Config.DamageWhenNotFound = true
+Config.PickaxeBreakThreshold = 30        -- Anything lower than 30 druablity and pickaxe can possibly break based in breakchance
+Config.PickaxeBreakChance = 4            -- Rolls between 1,20 if lower than this number, pickaxe breaks (8 = 40% chance)
 
 -- -------------------------------------------------------------------------- --
 --                               WASHING CONFIGS                              --
 -- -------------------------------------------------------------------------- --
-Config.WashingItem = "provision_miner_pan" -- If you want to require a washin item, otherwise set to false
 
 Config.SpecialOre = {
     ["resource_shinyore"] = {
@@ -27,6 +29,12 @@ Config.SpecialOre = {
         }
     }
     -- you can add more and they will be registered as usable
+
+}
+
+Config.DigReward = {
+    { label = "Worm", name = "p_baitWorm01x", chance = 6, amount = 5 },
+    -- { label = "Shiny Ore", name = "resource_shinyore", chance = 1, amount = 1 },
 
 }
 -- Config.UseSkills = true --
@@ -84,10 +92,10 @@ Config.MiningLocations = {
                 timeout = 120000,
                 mineLimit = 6,
                 items = {
-                    { label = "Coal",      name = "resource_coal",     chance = 2, amount = 4 },
-                    { label = "Copper",    name = "resource_copper",   chance = 2, amount = 4 },
-                    { label = "Iron",      name = "resource_iron",     chance = 2, amount = 4 },
-                    { label = "Shiny Ore", name = "resource_shinyore", chance = 1, amount = 4 },
+                    { label = "Coal", name = "resource_coal", chance = 3, amount = 4 },
+                    -- { label = "Copper", name = "resource_copper", chance = 2, amount = 4 },
+                    { label = "Iron", name = "resource_iron", chance = 2, amount = 4 },
+                    -- { label = "Shiny Ore", name = "resource_shinyore", chance = 1, amount = 4 },
 
                 }
             },
@@ -99,10 +107,10 @@ Config.MiningLocations = {
                 timeout = 150000,
                 mineLimit = 6,
                 items = {
-                    { label = "Coal",      name = "resource_coal",     chance = 3, amount = 4 },
-                    { label = "Copper",    name = "resource_copper",   chance = 3, amount = 4 },
-                    { label = "Iron",      name = "resource_iron",     chance = 3, amount = 4 },
-                    { label = "Shiny Ore", name = "resource_shinyore", chance = 1, amount = 4 },
+                    { label = "Coal", name = "resource_coal", chance = 4, amount = 4 },
+                    -- { label = "Copper", name = "resource_copper", chance = 3, amount = 4 },
+                    { label = "Iron", name = "resource_iron", chance = 3, amount = 4 },
+                    -- { label = "Shiny Ore", name = "resource_shinyore", chance = 1, amount = 4 },
                 },
             },
             -- Node 3
@@ -114,10 +122,10 @@ Config.MiningLocations = {
                 timeout = 180000,
                 mineLimit = 6,
                 items = {
-                    { label = "Coal",      name = "resource_coal",     chance = 4, amount = 4 },
-                    { label = "Copper",    name = "resource_copper",   chance = 4, amount = 4 },
-                    { label = "Iron",      name = "resource_iron",     chance = 4, amount = 4 },
-                    { label = "Shiny Ore", name = "resource_shinyore", chance = 1, amount = 4 },
+                    { label = "Coal", name = "resource_coal", chance = 5, amount = 4 },
+                    -- { label = "Copper", name = "resource_copper", chance = 4, amount = 4 },
+                    { label = "Iron", name = "resource_iron", chance = 4, amount = 4 },
+                    -- { label = "Shiny Ore", name = "resource_shinyore", chance = 1, amount = 4 },
                 }
             },
             -- Node 4
@@ -129,8 +137,8 @@ Config.MiningLocations = {
                 timeout = 210000,
                 mineLimit = 6,
                 items = {
-                    { label = "Coal",      name = "resource_coal",     chance = 5, amount = 4 },
-                    { label = "Copper",    name = "resource_copper",   chance = 5, amount = 4 },
+                    { label = "Coal",      name = "resource_coal",     chance = 6, amount = 4 },
+                    -- { label = "Copper",    name = "resource_copper",   chance = 5, amount = 4 },
                     { label = "Iron",      name = "resource_iron",     chance = 5, amount = 4 },
                     { label = "Shiny Ore", name = "resource_shinyore", chance = 1, amount = 4 },
                 }
@@ -144,8 +152,8 @@ Config.MiningLocations = {
                 timeout = 240000,
                 mineLimit = 6,
                 items = {
-                    { label = "Coal",      name = "resource_coal",     chance = 6, amount = 4 },
-                    { label = "Copper",    name = "resource_copper",   chance = 6, amount = 4 },
+                    { label = "Coal",      name = "resource_coal",     chance = 7, amount = 4 },
+                    -- { label = "Copper",    name = "resource_copper",   chance = 6, amount = 4 },
                     { label = "Iron",      name = "resource_iron",     chance = 6, amount = 4 },
                     { label = "Shiny Ore", name = "resource_shinyore", chance = 1, amount = 4 },
                 }
@@ -159,8 +167,8 @@ Config.MiningLocations = {
                 timeout = 270000,
                 mineLimit = 6,
                 items = {
-                    { label = "Coal",      name = "resource_coal",     chance = 7, amount = 4 },
-                    { label = "Copper",    name = "resource_copper",   chance = 7, amount = 4 },
+                    { label = "Coal",      name = "resource_coal",     chance = 8, amount = 4 },
+                    -- { label = "Copper",    name = "resource_copper",   chance = 7, amount = 4 },
                     { label = "Iron",      name = "resource_iron",     chance = 7, amount = 4 },
                     { label = "Shiny Ore", name = "resource_shinyore", chance = 1, amount = 4 },
                 }
@@ -174,8 +182,8 @@ Config.MiningLocations = {
                 timeout = 300000,
                 mineLimit = 6,
                 items = {
-                    { label = "Coal",      name = "resource_coal",     chance = 8, amount = 4 },
-                    { label = "Copper",    name = "resource_copper",   chance = 8, amount = 4 },
+                    { label = "Coal",      name = "resource_coal",     chance = 9, amount = 4 },
+                    -- { label = "Copper",    name = "resource_copper",   chance = 8, amount = 4 },
                     { label = "Iron",      name = "resource_iron",     chance = 8, amount = 4 },
                     { label = "Shiny Ore", name = "resource_shinyore", chance = 1, amount = 4 },
                 }
@@ -192,212 +200,174 @@ Config.MiningLocations = {
 
                 }
             },
-        }
-    },
-    --[[ ['Grizzlies'] = { -- just configure nodes
-        Name = "Grizzlies Mine",
-        coords = vector3(-1408.13, 1159.7, 226.82),
-        joblocked = false,
-        bliphash = "blip_ambient_hitching_post",
-        showblip = true,
-        zonesEnabled = true,
-        zone = {
-            coords = {
-                vector2(-1403.6580810547, 1161.162109375),
-                vector2(-1403.6580810547, 1161.162109375),
-                vector2(-1410.2136230469, 1157.8979492188),
-                vector2(-1427.0336914062, 1171.7775878906),
-                vector2(-1436.2889404297, 1174.6408691406),
-                vector2(-1447.5557861328, 1187.5775146484),
-                vector2(-1446.5275878906, 1190.3626708984),
-                vector2(-1450.2456054688, 1197.4976806641),
-                vector2(-1449.5972900391, 1206.8088378906),
-                vector2(-1441.9477539062, 1213.0260009766),
-                vector2(-1423.7954101562, 1220.9499511719),
-                vector2(-1403.1546630859, 1210.8597412109),
-                vector2(-1400.3980712891, 1192.0815429688),
-                vector2(-1382.0128173828, 1192.4700927734),
-                vector2(-1385.7451171875, 1179.8165283203),
-                vector2(-1388.9776611328, 1173.2745361328),
-                vector2(-1392.9338378906, 1166.17578125)
-            },
-            name = "grizzlies",
-            minZ = 221,
-            maxZ = 231,
-            debugPoly = true
-        },
-
-        nodes = {
-            -- Node 1
+            -- Node 9
             {
-                coords = vector4(-1418.19, 1192.96, 225.29, 264.82),
-                showmarker = true,
-                promptDistance = 1.0,
+                coords = vector4(-5970.53, -3167.55, -25.19, 335.96),
+                showmarker = false,
+                promptDistance = 0.75,
                 timeout = 120000,
-                mineLimit = 6,
+                mineLimit = 10,
                 items = {
-                    { label = "Coal",      name = "resource_coal",     chance = 2, amount = 4 },
-                    { label = "Copper",    name = "resource_copper",   chance = 2, amount = 4 },
-                    { label = "Iron",      name = "resource_iron",     chance = 2, amount = 4 },
-                    { label = "Shiny Ore", name = "resource_shinyore", chance = 1, amount = 4 },
+                    { label = "Coal", name = "resource_coal", chance = 9, amount = 2 },
+                    { label = "Iron", name = "resource_iron", chance = 8, amount = 2 },
+
                 }
             },
         }
-    }, ]]
-
-    --[[ ['Rathskeller'] = { -- requires spooni MLO
-    Name = "Rathskeller Mine",
-    coords = vector3(-5436.93, -2318.54, -3.27),
-    joblocked = false,
-    bliphash = "blip_ambient_hitching_post",
-    showblip = true,
-    zonesEnabled = true,
-    zone = {
-        coords = {
-            vector2(-1401.7211914062, 1159.59375),
-            vector2(-1411.4188232422, 1169.8903808594),
-            vector2(-1440.127319336, 1194.4460449218),
-            vector2(-1459.654663086, 1213.9061279296),
-            vector2(-1451.7838134766, 1186.5112304688),
-            vector2(-1409.1928710938, 1148.5270996094)
-        },
-        name = "rathskeller",
-        minZ = 226.53,
-        maxZ = 235.15,
-        debugPoly = true
     },
 
-    nodes = {
-        {
-            coords = vector3(-5452.27, -2313.52, -2.83),
-            showmarker = true,
-            timeout = 120000,
-            mineLimit = 6,
-            items = {
-                { name = "clay",       label = "Clay",         chance = 8,  amount = 4 },
-                { name = "coal",       label = "Coal",         chance = 8,  amount = 4 },
-                { name = "copper",     label = "Copper",       chance = 6,  amount = 8 },
-                { name = "iron",       label = "Iron",         chance = 6,  amount = 12 },
-                { name = "nitrite",    label = "Nitrite",      chance = 8,  amount = 4 },
-                { name = "Shiny Ore",  label = "Shiny Ores",   chance = 10, amount = 4 },
-                { name = "salt",       label = "Salt",         chance = 10, amount = 4 },
-                { name = "goldnugget", label = "Gold Nuggets", chance = 3,  amount = 2 },
-            }
-        },
-        {
-            coords = vector3(-5461.49, -2310.28, -3.55),
-            showmarker = true,
-            timeout = 120000,
-            mineLimit = 6,
-            items = {
-                { name = "clay",       label = "Clay",         chance = 8,  amount = 4 },
-                { name = "coal",       label = "Coal",         chance = 8,  amount = 4 },
-                { name = "copper",     label = "Copper",       chance = 6,  amount = 8 },
-                { name = "iron",       label = "Iron",         chance = 6,  amount = 12 },
-                { name = "nitrite",    label = "Nitrite",      chance = 8,  amount = 4 },
-                { name = "Shiny Ore",  label = "Shiny Ores",   chance = 10, amount = 4 },
-                { name = "salt",       label = "Salt",         chance = 10, amount = 4 },
-                { name = "goldnugget", label = "Gold Nuggets", chance = 3,  amount = 2 },
-            }
-        },
-        {
-            coords = vector3(-5467.6, -2317.97, -4.31),
-            showmarker = true,
-            timeout = 120000,
-            mineLimit = 6,
-            items = {
-                { name = "clay",       label = "Clay",         chance = 8,  amount = 4 },
-                { name = "coal",       label = "Coal",         chance = 8,  amount = 4 },
-                { name = "copper",     label = "Copper",       chance = 6,  amount = 8 },
-                { name = "iron",       label = "Iron",         chance = 6,  amount = 12 },
-                { name = "nitrite",    label = "Nitrite",      chance = 8,  amount = 4 },
-                { name = "Shiny Ore",  label = "Shiny Ores",   chance = 10, amount = 4 },
-                { name = "salt",       label = "Salt",         chance = 10, amount = 4 },
-                { name = "goldnugget", label = "Gold Nuggets", chance = 3,  amount = 2 },
-            }
-        },
-        {
-            coords = vector3(-5474.88, -2331.38, -6.82),
-            showmarker = true,
-            timeout = 120000,
-            mineLimit = 6,
-            items = {
-                { name = "clay",       label = "Clay",         chance = 8,  amount = 4 },
-                { name = "coal",       label = "Coal",         chance = 8,  amount = 4 },
-                { name = "copper",     label = "Copper",       chance = 6,  amount = 8 },
-                { name = "iron",       label = "Iron",         chance = 6,  amount = 12 },
-                { name = "nitrite",    label = "Nitrite",      chance = 8,  amount = 4 },
-                { name = "Shiny Ore",  label = "Shiny Ores",   chance = 10, amount = 4 },
-                { name = "salt",       label = "Salt",         chance = 10, amount = 4 },
-                { name = "goldnugget", label = "Gold Nuggets", chance = 3,  amount = 2 },
-            }
-        },
-        {
-            coords = vector3(-5495.06, -2347.38, -8.79),
-            showmarker = true,
-            timeout = 120000,
-            mineLimit = 6,
-            items = {
-                { name = "clay",       label = "Clay",         chance = 8,  amount = 4 },
-                { name = "coal",       label = "Coal",         chance = 8,  amount = 4 },
-                { name = "copper",     label = "Copper",       chance = 6,  amount = 8 },
-                { name = "iron",       label = "Iron",         chance = 6,  amount = 12 },
-                { name = "nitrite",    label = "Nitrite",      chance = 8,  amount = 4 },
-                { name = "Shiny Ore",  label = "Shiny Ores",   chance = 10, amount = 4 },
-                { name = "salt",       label = "Salt",         chance = 10, amount = 4 },
-                { name = "goldnugget", label = "Gold Nuggets", chance = 3,  amount = 2 },
-            }
-        },
-        {
-            coords = vector3(-5506.53, -2341.01, -7.82),
-            showmarker = true,
-            timeout = 120000,
-            mineLimit = 6,
-            items = {
-                { name = "clay",       label = "Clay",         chance = 8,  amount = 4 },
-                { name = "coal",       label = "Coal",         chance = 8,  amount = 4 },
-                { name = "copper",     label = "Copper",       chance = 6,  amount = 8 },
-                { name = "iron",       label = "Iron",         chance = 6,  amount = 12 },
-                { name = "nitrite",    label = "Nitrite",      chance = 8,  amount = 4 },
-                { name = "Shiny Ore",  label = "Shiny Ores",   chance = 10, amount = 4 },
-                { name = "salt",       label = "Salt",         chance = 10, amount = 4 },
-                { name = "goldnugget", label = "Gold Nuggets", chance = 3,  amount = 2 },
-            }
-        },
-        {
-            coords = vector3(-5494.26, -2322.53, -9.89),
-            showmarker = true,
-            timeout = 120000,
-            mineLimit = 6,
-            items = {
-                { name = "clay",       label = "Clay",         chance = 8,  amount = 4 },
-                { name = "coal",       label = "Coal",         chance = 8,  amount = 4 },
-                { name = "copper",     label = "Copper",       chance = 6,  amount = 8 },
-                { name = "iron",       label = "Iron",         chance = 6,  amount = 12 },
-                { name = "nitrite",    label = "Nitrite",      chance = 8,  amount = 4 },
-                { name = "Shiny Ore",  label = "Shiny Ores",   chance = 10, amount = 4 },
-                { name = "salt",       label = "Salt",         chance = 10, amount = 4 },
-                { name = "goldnugget", label = "Gold Nuggets", chance = 3,  amount = 2 },
-            }
-        },
-        {
-            coords = vector3(-5504.75, -2319.54, -10.95),
-            showmarker = true,
-            timeout = 120000,
-            mineLimit = 6,
-            items = {
-                { name = "clay",       label = "Clay",         chance = 8,  amount = 4 },
-                { name = "coal",       label = "Coal",         chance = 8,  amount = 4 },
-                { name = "copper",     label = "Copper",       chance = 6,  amount = 8 },
-                { name = "iron",       label = "Iron",         chance = 6,  amount = 12 },
-                { name = "nitrite",    label = "Nitrite",      chance = 8,  amount = 4 },
-                { name = "Shiny Ore",  label = "Shiny Ores",   chance = 10, amount = 4 },
-                { name = "salt",       label = "Salt",         chance = 10, amount = 4 },
-                { name = "goldnugget", label = "Gold Nuggets", chance = 3,  amount = 2 },
-            }
-        },
-    }
-}, ]]
+    -- ['Rathskeller'] = { -- requires spooni MLO
+    --     Name = "Rathskeller Mine",
+    --     coords = vector3(-5436.93, -2318.54, -3.27),
+    --     joblocked = false,
+    --     bliphash = "blip_ambient_hitching_post",
+    --     showblip = true,
+    --     zonesEnabled = true,
+    --     zone = {
+    --         coords = {
+    --             vector2(-5440.5571289062, -2319.5483398438),
+    --             vector2(-5440.5571289062, -2319.5483398438),
+    --             vector2(-5440.2451171875, -2315.9304199219),
+    --             vector2(-5448.0654296875, -2315.8659667969),
+    --             vector2(-5447.888671875, -2319.0686035156)
+    --         },
+    --         name = "rathskeller",
+    --         minZ = -9.86,
+    --         maxZ = 0.32,
+    --         debugPoly = false
+    --     },
+
+    --     nodes = {
+    --         {
+    --             coords = vector3(-5452.27, -2313.52, -2.83),
+    --             showmarker = true,
+    --             timeout = 120000,
+    --             mineLimit = 6,
+    --             items = {
+    --                 { name = "clay",       label = "Clay",         chance = 8,  amount = 4 },
+    --                 { name = "coal",       label = "Coal",         chance = 8,  amount = 4 },
+    --                 { name = "copper",     label = "Copper",       chance = 6,  amount = 8 },
+    --                 { name = "iron",       label = "Iron",         chance = 6,  amount = 12 },
+    --                 { name = "nitrite",    label = "Nitrite",      chance = 8,  amount = 4 },
+    --                 { name = "Shiny Ore",  label = "Shiny Ores",   chance = 10, amount = 4 },
+    --                 { name = "salt",       label = "Salt",         chance = 10, amount = 4 },
+    --                 { name = "goldnugget", label = "Gold Nuggets", chance = 3,  amount = 2 },
+    --             }
+    --         },
+    --         {
+    --             coords = vector3(-5461.49, -2310.28, -3.55),
+    --             showmarker = true,
+    --             timeout = 120000,
+    --             mineLimit = 6,
+    --             items = {
+    --                 { name = "clay",       label = "Clay",         chance = 8,  amount = 4 },
+    --                 { name = "coal",       label = "Coal",         chance = 8,  amount = 4 },
+    --                 { name = "copper",     label = "Copper",       chance = 6,  amount = 8 },
+    --                 { name = "iron",       label = "Iron",         chance = 6,  amount = 12 },
+    --                 { name = "nitrite",    label = "Nitrite",      chance = 8,  amount = 4 },
+    --                 { name = "Shiny Ore",  label = "Shiny Ores",   chance = 10, amount = 4 },
+    --                 { name = "salt",       label = "Salt",         chance = 10, amount = 4 },
+    --                 { name = "goldnugget", label = "Gold Nuggets", chance = 3,  amount = 2 },
+    --             }
+    --         },
+    --         {
+    --             coords = vector3(-5467.6, -2317.97, -4.31),
+    --             showmarker = true,
+    --             timeout = 120000,
+    --             mineLimit = 6,
+    --             items = {
+    --                 { name = "clay",       label = "Clay",         chance = 8,  amount = 4 },
+    --                 { name = "coal",       label = "Coal",         chance = 8,  amount = 4 },
+    --                 { name = "copper",     label = "Copper",       chance = 6,  amount = 8 },
+    --                 { name = "iron",       label = "Iron",         chance = 6,  amount = 12 },
+    --                 { name = "nitrite",    label = "Nitrite",      chance = 8,  amount = 4 },
+    --                 { name = "Shiny Ore",  label = "Shiny Ores",   chance = 10, amount = 4 },
+    --                 { name = "salt",       label = "Salt",         chance = 10, amount = 4 },
+    --                 { name = "goldnugget", label = "Gold Nuggets", chance = 3,  amount = 2 },
+    --             }
+    --         },
+    --         {
+    --             coords = vector3(-5474.88, -2331.38, -6.82),
+    --             showmarker = true,
+    --             timeout = 120000,
+    --             mineLimit = 6,
+    --             items = {
+    --                 { name = "clay",       label = "Clay",         chance = 8,  amount = 4 },
+    --                 { name = "coal",       label = "Coal",         chance = 8,  amount = 4 },
+    --                 { name = "copper",     label = "Copper",       chance = 6,  amount = 8 },
+    --                 { name = "iron",       label = "Iron",         chance = 6,  amount = 12 },
+    --                 { name = "nitrite",    label = "Nitrite",      chance = 8,  amount = 4 },
+    --                 { name = "Shiny Ore",  label = "Shiny Ores",   chance = 10, amount = 4 },
+    --                 { name = "salt",       label = "Salt",         chance = 10, amount = 4 },
+    --                 { name = "goldnugget", label = "Gold Nuggets", chance = 3,  amount = 2 },
+    --             }
+    --         },
+    --         {
+    --             coords = vector3(-5495.06, -2347.38, -8.79),
+    --             showmarker = true,
+    --             timeout = 120000,
+    --             mineLimit = 6,
+    --             items = {
+    --                 { name = "clay",       label = "Clay",         chance = 8,  amount = 4 },
+    --                 { name = "coal",       label = "Coal",         chance = 8,  amount = 4 },
+    --                 { name = "copper",     label = "Copper",       chance = 6,  amount = 8 },
+    --                 { name = "iron",       label = "Iron",         chance = 6,  amount = 12 },
+    --                 { name = "nitrite",    label = "Nitrite",      chance = 8,  amount = 4 },
+    --                 { name = "Shiny Ore",  label = "Shiny Ores",   chance = 10, amount = 4 },
+    --                 { name = "salt",       label = "Salt",         chance = 10, amount = 4 },
+    --                 { name = "goldnugget", label = "Gold Nuggets", chance = 3,  amount = 2 },
+    --             }
+    --         },
+    --         {
+    --             coords = vector3(-5506.53, -2341.01, -7.82),
+    --             showmarker = true,
+    --             timeout = 120000,
+    --             mineLimit = 6,
+    --             items = {
+    --                 { name = "clay",       label = "Clay",         chance = 8,  amount = 4 },
+    --                 { name = "coal",       label = "Coal",         chance = 8,  amount = 4 },
+    --                 { name = "copper",     label = "Copper",       chance = 6,  amount = 8 },
+    --                 { name = "iron",       label = "Iron",         chance = 6,  amount = 12 },
+    --                 { name = "nitrite",    label = "Nitrite",      chance = 8,  amount = 4 },
+    --                 { name = "Shiny Ore",  label = "Shiny Ores",   chance = 10, amount = 4 },
+    --                 { name = "salt",       label = "Salt",         chance = 10, amount = 4 },
+    --                 { name = "goldnugget", label = "Gold Nuggets", chance = 3,  amount = 2 },
+    --             }
+    --         },
+    --         {
+    --             coords = vector3(-5494.26, -2322.53, -9.89),
+    --             showmarker = true,
+    --             timeout = 120000,
+    --             mineLimit = 6,
+    --             items = {
+    --                 { name = "clay",       label = "Clay",         chance = 8,  amount = 4 },
+    --                 { name = "coal",       label = "Coal",         chance = 8,  amount = 4 },
+    --                 { name = "copper",     label = "Copper",       chance = 6,  amount = 8 },
+    --                 { name = "iron",       label = "Iron",         chance = 6,  amount = 12 },
+    --                 { name = "nitrite",    label = "Nitrite",      chance = 8,  amount = 4 },
+    --                 { name = "Shiny Ore",  label = "Shiny Ores",   chance = 10, amount = 4 },
+    --                 { name = "salt",       label = "Salt",         chance = 10, amount = 4 },
+    --                 { name = "goldnugget", label = "Gold Nuggets", chance = 3,  amount = 2 },
+    --             }
+    --         },
+    --         {
+    --             coords = vector3(-5504.75, -2319.54, -10.95),
+    --             showmarker = true,
+    --             timeout = 120000,
+    --             mineLimit = 6,
+    --             items = {
+    --                 { name = "clay",       label = "Clay",         chance = 8,  amount = 4 },
+    --                 { name = "coal",       label = "Coal",         chance = 8,  amount = 4 },
+    --                 { name = "copper",     label = "Copper",       chance = 6,  amount = 8 },
+    --                 { name = "iron",       label = "Iron",         chance = 6,  amount = 12 },
+    --                 { name = "nitrite",    label = "Nitrite",      chance = 8,  amount = 4 },
+    --                 { name = "Shiny Ore",  label = "Shiny Ores",   chance = 10, amount = 4 },
+    --                 { name = "salt",       label = "Salt",         chance = 10, amount = 4 },
+    --                 { name = "goldnugget", label = "Gold Nuggets", chance = 3,  amount = 2 },
+    --             }
+    --         },
+    --     }
+    -- },
 
     -- add as many as you want. (I wouldn't add every mine though, just the ones you want to use)
 }
