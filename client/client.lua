@@ -9,6 +9,8 @@ local playerHasPickaxe = false
 local isInMineZone     = nil
 local isPlayerMining   = false
 local isPromptPressed  = false
+local visibleMarkers   = {}
+local activePromptNode = nil
 
 -- -------------------------------------------------------------------------- --
 --                                  FUNCTIONS                                 --
@@ -25,7 +27,6 @@ local function addBlips(mine, bliphash, coords)
     Citizen.InvokeNative(0x9CB1A1623062F402, blip, mine)
 end
 -- ------------------------------ setup prompts ----------------------------- --
--- TODO add option for ox_target
 local function promptSetup()
     if PromptGroup ~= nil then
         UiPromptDelete(StartMining)
@@ -33,7 +34,7 @@ local function promptSetup()
     end
     -- Register new prompt
     StartMining = UiPromptRegisterBegin()
-    UiPromptSetControlAction(StartMining, Config.MineKey)
+    UiPromptSetControlAction(StartMining, Config.MineKey) -- Example: 'X' button
     local label = VarString(10, 'LITERAL_STRING', "Mine")
     UiPromptSetText(StartMining, label)
     UiPromptSetEnabled(StartMining, true)
@@ -50,7 +51,7 @@ local function checkDistance(player, coords)
 end
 
 local function addMiningPrompt(node)
-    local MiningGroupName = CreateVarString(10, 'LITERAL_STRING', "Node " .. node)
+    local MiningGroupName = CreateVarString(10, 'LITERAL_STRING', "Spot " .. node)
     UiPromptSetActiveGroupThisFrame(PromptGroup, MiningGroupName)
     UiPromptSetEnabled(StartMining, true)
 end
@@ -92,7 +93,7 @@ local function isNodeUnlocked(nodeKey)
     return hasTimedOut
 end
 
--- TODO Helper animation function to play any animation passed in
+
 -- -------------------------- update pickaxe status ------------------------- --
 RegisterNetEvent('bnddo_mining:client:pickaxeStatus', function(status)
     playerHasPickaxe = status
@@ -186,10 +187,11 @@ RegisterNetEvent('bnddo_mining:client:startDigging', function()
     local ped = PlayerPedId()
     local pos = GetEntityCoords(ped)
 
+    -- Cast a probe 10 units down
     local result, waterPos = TestProbeAgainstAllWater(
-        pos.x, pos.y, pos.z + 1.0,
-        pos.x, pos.y, pos.z - 10.0,
-        0
+        pos.x, pos.y, pos.z + 1.0,  -- start a bit above
+        pos.x, pos.y, pos.z - 10.0, -- end below
+        0                           -- flags (usually 0)
     )
 
     if result == 1 then
@@ -220,10 +222,10 @@ RegisterNetEvent('bnddo_mining:client:startDigging', function()
         else
             Core.NotifyTip("You're not close enough to water", 4000)
         end
-    elseif result == 2 then
-        Core.NotifyTip("You don't find a place to dig", 4000)
+    elseif result == 2 then -- blocked
+        print("Probe was blocked (hit collision).")
     else
-        Core.NotifyTip("You don't see any water nearby", 4000)
+        Core.NotifyTip("You need to be near water to dig", 4000)
     end
 end)
 
@@ -246,7 +248,7 @@ RegisterNetEvent('bnddo_mining:client:startWashing', function(ore, oreLabel)
 
     -- Check if player is in water and in an allowed zone
     if not IsEntityInWater(player) then
-        Core.NotifyTip("You are not in water", 4000)
+        Core.NotifyTip("You must be in water to wash ores", 4000)
         Debug("Player is not in water.")
         return
     end
@@ -311,10 +313,10 @@ RegisterNetEvent('bnddo_mining:client:endMining', function(mine, node, found, it
     MinedData[nodeKey].startedAt = GetGameTimer()
     MinedData[nodeKey].isLocked = true
 
+
     isPlayerMining = false
     isPromptPressed = false
 end)
-
 
 RegisterNetEvent('bnddo_mining:client:updateMiningNode', function(mineStatus, mine)
     if isInMineZone ~= mine then return end
@@ -337,20 +339,18 @@ RegisterNetEvent('bnddo_mining:client:updateMiningNode', function(mineStatus, mi
     end
 end)
 
-
 -- -------------------------------------------------------------------------- --
 --                                   THREADS                                  --
 -- -------------------------------------------------------------------------- --
 
 -- ----------------------------- PolyZone Thread ---------------------------- --
 CreateThread(function()
+    -- repeat Wait(1000) until LocalPlayer.state.IsInSession
     local isInside = false
     for mineName, mineData in pairs(Config.MiningLocations) do
         if mineData.bliphash and mineData.bliphash ~= "" then
             addBlips(mineData.Name, mineData.bliphash, mineData.coords)
         end
-
-
 
         if mineData.zone and mineData.zonesEnabled then
             local mineZone = PolyZone:Create(mineData.zone.coords, {
@@ -389,74 +389,127 @@ end)
 CreateThread(function()
     repeat Wait(1000) until LocalPlayer.state.IsInSession
     promptSetup()
-    -- if mineStatus.hasPickaxe > 0 then
-    --     TriggerEvent('bnddo_mining:client:pickaxeStatus', true)
-    -- end
+
     while true do
         local timeout = 500
         local player = PlayerPedId()
-
         local playerNearNode = false
 
-        if isInMineZone and playerHasPickaxe and not isPlayerMining and not IsEntityDead(player) then
-            local playerCoords = GetEntityCoords(player)
-            for node, nodeData in pairs(Config.MiningLocations[isInMineZone].nodes) do
-                local playerDistance = checkDistance(playerCoords, nodeData.coords)
-                local nodeKey = NodeKey(isInMineZone, nodeData.coords)
-                local isNodeLocked = isNodeUnlocked(nodeKey)
-                local nodeInfo = MinedData[nodeKey]
-                local nodeAvailable = nodeInfo and nodeInfo.currentCount < nodeInfo.maxCount
-                local canUsePrompt = playerDistance <= nodeData.promptDistance
-                    and not isPromptPressed
-                    and isNodeLocked
-                    and nodeAvailable
+        if not isInMineZone then
+            visibleMarkers = {}
+            Wait(500)
+        else
+            if playerHasPickaxe and not isPlayerMining and not IsEntityDead(player) then
+                local playerCoords = GetEntityCoords(player)
 
+                for nodeIndex, nodeData in pairs(Config.MiningLocations[isInMineZone].nodes) do
+                    local nodeKey = NodeKey(isInMineZone, nodeData.coords)
+                    local nodeInfo = MinedData[nodeKey]
+                    local nodeAvailable = nodeInfo and nodeInfo.currentCount < (nodeInfo.maxCount or 0)
+                    local unlocked = isNodeUnlocked(nodeKey)
 
-                if canUsePrompt then
-                    playerNearNode = true
-                    addMiningPrompt(node)
+                    -- Only draw marker when node is unlocked AND available
+                    if nodeData.showmarker
+                        and unlocked
+                        and nodeAvailable
+                    then
+                        local playerDistance = checkDistance(playerCoords, nodeData.coords)
+                        if playerDistance <= (nodeData.markerDistance or 30.0) then
+                            visibleMarkers[nodeKey] = { coords = nodeData.coords, showmarker = true }
+                        else
+                            visibleMarkers[nodeKey] = nil
+                        end
+                    else
+                        visibleMarkers[nodeKey] = nil
+                    end
 
+                    local playerDistance = checkDistance(playerCoords, nodeData.coords)
+                    local canUsePrompt = playerDistance <= nodeData.promptDistance
+                        and not isPromptPressed
+                        and unlocked
+                        and nodeAvailable
 
-                    if UiPromptHasHoldModeCompleted(StartMining) then
-                        isPromptPressed = true
-                        Debug("pressed the mining prompt")
-                        TriggerEvent('bnddo_mining:client:startMining', isInMineZone, node, nodeData.coords)
+                    if canUsePrompt then
+                        playerNearNode = true
+                        activePromptNode = {
+                            zone   = isInMineZone,
+                            node   = nodeIndex,
+                            coords = nodeData.coords
+                        }
+                        addMiningPrompt(nodeIndex)
                     end
                 end
+            else
+                visibleMarkers = {}
             end
         end
-        timeout = playerNearNode and 5 or 500
+
+        timeout = playerNearNode and 2 or 500
         Wait(timeout)
     end
 end)
 
-if Config.Debug then
-    RegisterCommand("checkNodeStatus", function()
-        print("Node Status: " .. json.encode(MinedData))
-    end, false)
 
-    RegisterCommand('checkWater', function()
-        local ped = PlayerPedId()
-        local pos = GetEntityCoords(ped)
-
-        -- Cast a probe 10 units down
-        local result, waterPos = TestProbeAgainstAllWater(
-            pos.x, pos.y, pos.z + 1.0,
-            pos.x, pos.y, pos.z - 10.0,
-            0
-        )
-
-        if result == 1 then
-            local distance = math.abs(pos.z - waterPos.z)
-            if distance <= 1.5 then
-                print("Near water! Distance:", distance)
-            else
-                print("Water detected but too far below. Distance:", distance)
+-- ------------------------------ Marker thread ----------------------------- --
+CreateThread(function()
+    while true do
+        if isInMineZone then
+            for _, data in pairs(visibleMarkers) do
+                if data.showmarker then
+                    Citizen.InvokeNative(0x2A32FAA57B937173,
+                        0x07DCE236,        -- type/hash
+                        data.coords.x, data.coords.y, data.coords.z - 1.0,
+                        0.0, 0.0, 0.0,     -- rot
+                        0.0, 0.0, 0.0,     -- dir
+                        1.0, 1.0, 1.0,     -- scale
+                        255, 255, 255, 90, -- RGBA
+                        false, false, false, 1, false, false, false
+                    )
+                end
             end
-        elseif result == 2 then
-            print("Probe was blocked (hit collision).")
+
+            if activePromptNode and UiPromptHasHoldModeCompleted(StartMining) and not isPromptPressed then
+                isPromptPressed = true
+                Debug("pressed the mining prompt")
+                TriggerEvent('bnddo_mining:client:startMining',
+                    activePromptNode.zone,
+                    activePromptNode.node,
+                    activePromptNode.coords
+                )
+            end
+
+            Wait(0)
         else
-            print("No water below.")
+            Wait(1000)
         end
-    end)
-end
+    end
+end)
+-- -------------------------------- dev stuff ------------------------------- --
+-- RegisterCommand("checkNodeStatus", function()
+--     print("Node Status: " .. json.encode(MinedData))
+-- end, false)
+
+-- RegisterCommand('checkWater', function()
+--     local ped = PlayerPedId()
+--     local pos = GetEntityCoords(ped)
+
+--     -- Cast a probe 10 units down
+--     local result, waterPos = TestProbeAgainstAllWater(
+--         pos.x, pos.y, pos.z + 1.0,  -- start a bit above
+--         pos.x, pos.y, pos.z - 10.0, -- end below
+--         0                           -- flags (usually 0)
+--     )
+
+--     if result == 1 then -- SCRIPT_WATER_TEST_RESULT_WATER
+--         local distance = math.abs(pos.z - waterPos.z)
+--         if distance <= 1.5 then
+--             print("✅ Player is near water! Distance:", distance)
+--         else
+--             print("Water detected but too far below. Distance:", distance)
+--         end
+--     elseif result == 2 then -- blocked
+--         print("Probe was blocked (hit collision).")
+--     else
+--         print("No water below.")
+--     end
+-- end)
