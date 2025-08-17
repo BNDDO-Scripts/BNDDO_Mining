@@ -17,6 +17,7 @@ A mining script for VORP.
 - No need to equip pickaxe, just have in your inventory. This eliminates the walking animation (I hope)
 - Ore washing for rare items, locations, required wash item , rewards and chances all configurable
 - Digging near water sources for various items (Bait, Valuables etc)
+- New drawable markers per node
 
 # Dependencies
 
