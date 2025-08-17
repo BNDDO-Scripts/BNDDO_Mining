@@ -366,7 +366,7 @@ CreateThread(function()
             mineZone:onPlayerInOut(function(isInside)
                 if isInside then
                     Debug("Player is inside " .. mineName .. " zone")
-                    -- Get node information from server
+
                     isInMineZone = mineName
                     local mineStatus = Core.Callback.TriggerAwait('bnddo:server:checkMiningStatus', isInMineZone)
                     if mineStatus.hasPickaxe > 0 then
