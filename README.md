@@ -1,4 +1,5 @@
 # BNDDO_Mining
+# NO LONGER SUPPORTING THIS SCRIPT
 
 A mining script for VORP.
 
